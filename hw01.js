@@ -51,13 +51,6 @@ function drawFourQuads(gl, width, height) {
 
   const halfW = width / 2;
   const halfH = height / 2;
-
-  // 우선 전체 화면을 검정색으로 지우기 (초기화)
-  gl.viewport(0, 0, width, height);
-  gl.scissor(0, 0, width, height);
-  gl.clearColor(0.0, 0.0, 0.0, 1.0);
-  gl.clear(gl.COLOR_BUFFER_BIT);
-
   //(A) 왼쪽 위-빨강
   // WebGL 좌표계: 왼쪽 아래가 (0,0), 아래 -> 위로 y증가
   gl.viewport(0, halfH, halfW, halfH);
