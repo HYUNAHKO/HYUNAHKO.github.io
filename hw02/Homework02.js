@@ -1,5 +1,5 @@
 // util.js에서 resizeAspectRatio 함수를 import
-import { resizeAspectRatio } from './util.js';
+import { resizeAspectRatio } from '../util/util.js';
 
 // HTML 파일에서 canvas 요소를 가져와서 WebGL2 context를 얻음
 const canvas = document.getElementById('glCanvas');
@@ -14,6 +14,7 @@ let program;
 let translation = [0.0, 0.0]; //정사각형 초기 위치 (캔버스 중앙, clip space 기준)
 const step = 0.01; // Arrow key 누르면서 이동하는 거리
 let translationUniformLocation;
+let vertexBuffer;
 
 function init(){
     //쉐이더 load
@@ -69,7 +70,7 @@ function createShader(source, type) {
     return shader;
 }
 
-let vertexBuffer;
+
 function initBuffers() {
     const vertices = new Float32Array([
         -0.1, -0.1,
@@ -89,7 +90,7 @@ function initBuffers() {
 }
 
 function setupEventListeners() {
-  // 화살표 키 이벤트로 정사각형 이동 (타이트한 경계 처리함함)
+  // 화살표 키 이벤트로 정사각형 이동 (타이트한 경계 처리함)
   window.addEventListener('keydown', (event) => {
     let moved = false;
     const halfSize = 0.1;  // 정사각형의 반 길이
