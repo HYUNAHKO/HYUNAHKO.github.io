@@ -2,7 +2,7 @@
 import { resizeAspectRatio, setupText } from '../util/util.js';
 import { Shader, readShaderFile } from '../util/shader.js';
 
-// 1) Canvas, GL 변수 선언
+// Canvas, GL 변수 선언
 const canvas = document.getElementById('glCanvas');
 const gl = canvas.getContext('webgl2');
 
