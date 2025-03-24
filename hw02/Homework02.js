@@ -1,5 +1,5 @@
 // util.js에서 resizeAspectRatio 함수 포함하여 추가적으로로 import
-import { resizeAspectRatio, setupText } from '../util/util.js';
+import { resizeAspectRatio, setupText, updateText } from '../util/util.js';
 import { Shader, readShaderFile } from '../util/shader.js';
 
 // 1) Canvas, GL 변수 선언
