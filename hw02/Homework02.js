@@ -55,13 +55,11 @@ function setupKeyboardEvents() {
 
 function setupBuffers(shader) {
   const vertices = new Float32Array([
-       0.0,  0.0, 0.0,  // center
-      -0.1, -0.1, 0.0,  // Bottom left
-       0.1, -0.1, 0.0,  // Bottom right
-       0.1,  0.1, 0.0,  // Top right
-      -0.1,  0.1, 0.0,  // Top left
-      -0.1, -0.1, 0.0   // Bottom left 
- ]);
+    -0.1, -0.1, 0.0,  // Bottom-left
+     0.1, -0.1, 0.0,  // Bottom-right
+     0.1,  0.1, 0.0,  // Top-right
+    -0.1,  0.1, 0.0   // Top-left
+  ]); // 정사각형
   const vao = gl.createVertexArray();
   gl.bindVertexArray(vao);
 
@@ -123,7 +121,7 @@ function render(vao, shader) {
   shader.setVec4("uColor", color);
 
   gl.bindVertexArray(vao);
-  gl.drawArrays(gl.TRIANGLE_FAN, 0, 6);
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
 
   requestAnimationFrame(() => render(vao, shader));
 }
