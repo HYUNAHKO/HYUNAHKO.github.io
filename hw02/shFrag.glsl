@@ -1,9 +1,10 @@
 #version 300 es
 precision mediump float;
 
-out vec4 outColor;
+uniform vec4 uColor;
+
+out vec4 FragColor;
 
 void main() {
-  // 모든 프래그먼트를 빨간색으로 칠함
-  outColor = vec4(1.0, 0.0, 0.0, 1.0);
+    FragColor = uColor;
 }

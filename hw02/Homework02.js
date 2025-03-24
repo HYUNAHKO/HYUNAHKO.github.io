@@ -1,157 +1,173 @@
-// util.js에서 resizeAspectRatio 함수를 import
-import { resizeAspectRatio } from '../util/util.js';
+// util.js에서 resizeAspectRatio 함수 포함하여 추가적으로로 import
+import { resizeAspectRatio, setupText } from '../util/util.js';
+import { Shader, readShaderFile } from '../util/shader.js';
 
-// HTML 파일에서 canvas 요소를 가져와서 WebGL2 context를 얻음
+// 1) Canvas, GL 변수 선언
 const canvas = document.getElementById('glCanvas');
 const gl = canvas.getContext('webgl2');
 
-if (!gl) {
-    console.error('WebGL 2 is not supported by your browser.');
-}
+let shader;
+let vao;
+let position = [0.0, 0.0]; //정사각형 초기 위치 (캔버스 중앙, clip space 기준)
+const moveStep = 0.01; // Arrow key 누르면 이동하는 거리
+const squareSize = 0.2; // 정사각형 크기
+let keys = {
+  ArrowUp: false,
+  ArrowDown: false,
+  ArrowLeft: false,
+  ArrowRight: false,
+};
 
-//전역 변수 명명
-let program;
-let translation = [0.0, 0.0]; //정사각형 초기 위치 (캔버스 중앙, clip space 기준)
-const step = 0.01; // Arrow key 누르면서 이동하는 거리
-let translationUniformLocation;
-let vertexBuffer;
+function initWebGL() {
+  if (!gl) {
+      console.error('WebGL 2 is not supported by your browser.');
+      return false;
+  }
 
-function init(){
-    //쉐이더 load
-    Promise.all([
-        fetch('shVert.glsl').then((response) => response.text()),
-        fetch('shFrag.glsl').then((response) => response.text())
-    ]).then(([vsSource, fsSource]) => {
-        program = createProgram(vsSource, fsSource);
-        gl.useProgram(program);
+  canvas.width = 600;
+  canvas.height = 600;
 
-        initBuffers();
+  resizeAspectRatio(gl, canvas);
 
-        // vertex shader의 u_translation uniform 위치를 얻어 초기값을 전달
-        translationUniformLocation = gl.getUniformLocation(program, 'u_translation');
-        gl.uniform2fv(translationUniformLocation, translation);
-
-        setupEventListeners();
-        // 창 크기에 따라 canvas의 비율(1:1)을 유지하도록 함
-        resizeAspectRatio(gl, canvas, render);
-        render();
-    })
-    .catch(err => console.error('Shader load error', err));
-}
-
-function createProgram(vsSource, fsSource) {
-    const vertexShader = createShader(vsSource, gl.VERTEX_SHADER);
-    const fragmentShader = createShader(fsSource, gl.FRAGMENT_SHADER,);
-
-    const program = gl.createProgram();
-    gl.attachShader(program, vertexShader);
-    gl.attachShader(program, fragmentShader);
-    gl.linkProgram(program);
-
-    if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-        console.error('Program link error:', gl.getProgramInfoLog(program));
-        return null;
-    }
-
-    return program;
-}
-
-function createShader(source, type) {
-    const shader = gl.createShader(type);
-    gl.shaderSource(shader, source);
-    gl.compileShader(shader);
-
-    if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-        console.error('Shader compile error:', gl.getShaderInfoLog(shader));
-        gl.deleteShader(shader);
-        return null;
-    }
-
-    return shader;
-}
-
-
-function initBuffers() {
-    const vertices = new Float32Array([
-        -0.1, -0.1,
-         0.1, -0.1,
-         0.1,  0.1,
-        -0.1,  0.1
-      ]);
-      ; // 정사각형 4개의 꼭지점
-
-    vertexBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
-
-    const aPosition = gl.getAttribLocation(program, 'a_position');
-    gl.enableVertexAttribArray(aPosition);
-    gl.vertexAttribPointer(aPosition, 2, gl.FLOAT, false, 0, 0);
-}
-
-function setupEventListeners() {
-  // 화살표 키 이벤트로 정사각형 이동 (타이트한 경계 처리함)
-  window.addEventListener('keydown', (event) => {
-    let moved = false;
-    const halfSize = 0.1;  // 정사각형의 반 길이
-
-    if (event.key === 'ArrowUp') {
-      if (translation[1] + step + halfSize > 1.0) {
-        translation[1] = 1.0 - halfSize;
-        moved = true;
-      } else {
-        translation[1] += step;
-        moved = true;
-      }
-    } else if (event.key === 'ArrowDown') {
-      if (translation[1] - step - halfSize < -1.0) {
-        translation[1] = -1.0 + halfSize;
-        moved = true;
-      } else {
-        translation[1] -= step;
-        moved = true;
-      }
-    } else if (event.key === 'ArrowLeft') {
-      if (translation[0] - step - halfSize < -1.0) {
-        translation[0] = -1.0 + halfSize;
-        moved = true;
-      } else {
-        translation[0] -= step;
-        moved = true;
-      }
-    } else if (event.key === 'ArrowRight') {
-      if (translation[0] + step + halfSize > 1.0) {
-        translation[0] = 1.0 - halfSize;
-        moved = true;
-      } else {
-        translation[0] += step;
-        moved = true;
-      }
-    }
-    if (moved) {
-      gl.uniform2fv(translationUniformLocation, translation);
-      render();
-    }
-  });
+  // WebGL settings 초기화
+  gl.viewport(0, 0, canvas.width, canvas.height);
+  gl.clearColor(0.0, 0.0, 0.0, 1.0);
   
-  // keyup 이벤트 
-  window.addEventListener('keyup', (event) => {
-    if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(event.key)) {
-      // 현재는 keydown에서 처리됨
-    }
+  return true;
+}
+
+async function initShader() {
+  const vertexShaderSource = await readShaderFile('shVert.glsl');
+  const fragmentShaderSource = await readShaderFile('shFrag.glsl');
+  shader = new Shader(gl, vertexShaderSource, fragmentShaderSource);
+}
+
+
+function setupKeyboardEvents() {
+  document.addEventListener('keydown', (event) => {
+      if (event.key in keys) keys[event.key] = true;
+  });
+
+  document.addEventListener('keyup', (event) => {
+      if (event.key in keys) keys[event.key] = false;
   });
 }
 
+function setupBuffers(shader) {
+  const vertices = new Float32Array([
+       0.0,  0.0, 0.0,  // center
+      -0.1, -0.1, 0.0,  // Bottom left
+       0.1, -0.1, 0.0,  // Bottom right
+       0.1,  0.1, 0.0,  // Top right
+      -0.1,  0.1, 0.0,  // Top left
+      -0.1, -0.1, 0.0   // Bottom left 
+ ]);
+  const vao = gl.createVertexArray();
+  gl.bindVertexArray(vao);
 
-function render() {
-    gl.clear(gl.COLOR_BUFFER_BIT);
-    // TRIANGLE_FAN 방식으로 정사각형 그리기
-    gl.drawArrays(gl.TRIANGLE_FAN, 0, 4);
+  const vertexBuffer = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, vertexBuffer);
+  gl.bufferData(gl.ARRAY_BUFFER, vertices, gl.STATIC_DRAW);
+
+  shader.setAttribPointer("aPosition", 3, gl.FLOAT, false, 0, 0); // 0이라고 하면 안됨
+
+  return vao;
 }
-  
-  
-window.addEventListener('resize', () => {
-  resizeAspectRatio(gl, canvas, render);
+
+function updatePosition() {
+  if (keys.ArrowUp) {
+      const next = position[1] + moveStep;
+      if (next + squareSize / 2 > 1.0) {
+          position[1] = 1.0 - squareSize / 2;
+      } else {
+          position[1] = next;
+      }
+  }
+
+  if (keys.ArrowDown) {
+      const next = position[1] - moveStep;
+      if (next - squareSize / 2 < -1.0) {
+          position[1] = -1.0 + squareSize / 2;
+      } else {
+          position[1] = next;
+      }
+  }
+
+  if (keys.ArrowRight) {
+      const next = position[0] + moveStep;
+      if (next + squareSize / 2 > 1.0) {
+          position[0] = 1.0 - squareSize / 2;
+      } else {
+          position[0] = next;
+      }
+  }
+
+  if (keys.ArrowLeft) {
+      const next = position[0] - moveStep;
+      if (next - squareSize / 2 < -1.0) {
+          position[0] = -1.0 + squareSize / 2;
+      } else {
+          position[0] = next;
+      }
+  }
+}
+
+function render(vao, shader) {
+  gl.clear(gl.COLOR_BUFFER_BIT);
+
+  updatePosition();
+
+  let color = [1.0, 0.0, 0.0, 1.0]; // 빨강 사각형
+
+  shader.setVec2("uPosition", position);
+  shader.setVec4("uColor", color);
+
+  gl.bindVertexArray(vao);
+  gl.drawArrays(gl.TRIANGLE_FAN, 0, 6);
+
+  requestAnimationFrame(() => render(vao, shader));
+}
+
+
+async function main() {
+    try {
+
+        // WebGL 초기화
+        if (!initWebGL()) {
+            throw new Error('WebGL 초기화 실패');
+        }
+
+        // 셰이더 초기화
+        shader = await initShader();
+
+        // setup text overlay (see util.js)
+        setupText(canvas, "Use arrow keys to move the rectangle", 1);
+
+        // 키보드 이벤트 설정
+        setupKeyboardEvents();
+        
+        // 나머지 초기화
+        shader.use();
+        vao = setupBuffers(shader);
+        
+        // 렌더링 시작
+        render(vao, shader);
+
+        return true;
+
+    } catch (error) {
+        console.error('Failed to initialize program:', error);
+        alert('프로그램 초기화에 실패했습니다.');
+        return false;
+    }
+}
+
+// call main function
+main().then(success => {
+  if (!success) {
+      console.log('프로그램을 종료합니다.');
+      return;
+  }
+}).catch(error => {
+  console.error('프로그램 실행 중 오류 발생:', error);
 });
-
-window.onload = init;
