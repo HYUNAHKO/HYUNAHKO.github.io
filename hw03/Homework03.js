@@ -332,10 +332,10 @@ function render() {
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(verts), gl.DYNAMIC_DRAW);
     if(isCircleDone){
       // 원 확정 => 핑크 
-      shader.setVec4("u_color",[0.96, 0.0, 0.96, 1.0]);
+      shader.setVec4("u_color", [0.96, 0.0, 0.96, 1.0]);
     } else {
       // 드래그 중 원 => 회색
-      shader.setVec4("u_color",[0.7, 0.7, 0.7, 1.0]);
+      shader.setVec4("u_color", [0.7, 0.7, 0.7, 1.0]);
     }
     gl.bindVertexArray(vao);
     gl.drawArrays(gl.LINE_LOOP, 0, segs);
@@ -364,7 +364,7 @@ function render() {
   if(isIntersectionComputed && intersectionPoints.length>0){
     let pts=[];
     intersectionPoints.forEach(pt=>{
-      pts.push(pt[0],pt[1]);
+      pts.push(pt[0], pt[1]);
     });
     gl.bufferData(gl.ARRAY_BUFFER,new Float32Array(pts),gl.DYNAMIC_DRAW);
     // 노랑
@@ -396,7 +396,6 @@ async function main() {
       // 셰이더
       shader = await initShader();
   
-      // 버퍼
       setupCanvas();
       setupBuffers(shader);
       shader.use();
