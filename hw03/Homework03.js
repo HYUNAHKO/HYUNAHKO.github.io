@@ -1,20 +1,3 @@
-/*
-기능 요약:
-1) 원(Circle) 입력:
-   - 마우스 다운 시 원의 중심
-   - 드래그로 반지름 실시간 변경 (임시 원)
-   - 마우스 업 시 원 확정 (첫 번째 줄에 정보)
-
-2) 선분(Line) 입력:
-   - 07_LineSegments 방식으로 클릭/드래그
-   - 임시 선분(회색), 업 시 빨간색 확정 (두 번째 줄에 정보)
-
-3) Circle & Line 교차점 계산:
-   - 선분 입력 끝나자마자 교차점 계산
-   - 교차점 있으면 세 번째 줄에 정보 표시
-   - 교차점은 gl.POINTS (크기 10)로 화면에 표시
-*/
-
 import { resizeAspectRatio, setupText, updateText, Axes} from '../util/util.js';
 import { Shader, readShaderFile } from '../util/shader.js';
 
