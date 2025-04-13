@@ -17,8 +17,8 @@ let modelMatrix = mat4.create();  // 사각뿔은 고정 → modelMatrix는 단�
 const cameraCircleRadius = 3.0;
 const cameraHeightMin = 0.0;
 const cameraHeightMax = 10.0;
-const cameraCircleSpeed = 90.0; // deg/sec
-const cameraHeightSpeed = 45.0; // deg/sec
+const cameraCircleSpeedXZ = 90.0; // deg/sec
+const cameraCircleSpeedY = 45.0; // deg/sec
 
 // SquarePyramid 객체 생성
 const pyramid = new SquarePyramid(gl);
@@ -74,10 +74,10 @@ function render() {
     // 카메라 위치 계산:
     // - x, z: 원의 반지름 3을 따라 90°/sec 회전
     // - y: sin 함수를 이용해 45°/sec로 위아래로 진동
-    const angleRad = glMatrix.toRadian(cameraCircleSpeed* elapsedTime);
+    const angleRad = glMatrix.toRadian(cameraCircleSpeedXZ * elapsedTime);
     const camX = cameraCircleRadius * Math.sin(angleRad);
     const camZ = cameraCircleRadius * Math.cos(angleRad);
-    const camY = cameraHeightMin + (cameraHeightMax - cameraHeightMin) * 0.5 * (Math.sin(glMatrix.toRadian(cameraHeightSpeed * elapsedTime)) + 1); 
+    const camY = cameraHeightMin + (cameraHeightMax - cameraHeightMin) * 0.5 * (Math.sin(glMatrix.toRadian(cameraCircleSpeedY * elapsedTime)) + 1); 
 
     // 카메라가 원점 (0, 0, 0)을 바라보도록 설정 (바닥면의 중앙)
     mat4.lookAt(viewMatrix,
